@@ -7,5 +7,5 @@ MinPlatformVersion: 0
 ProOnly: True
 Author: Marek Zmyslowski
 ShortDescription: Monitors traffic and looks for parameter values that are reflected in the response.
-EntryPoint: build/libs/reflected-parameters-monitor-all.jar
-BuildCommand: gradle -PburpJar=$BURP_JAR fatJar
+EntryPoint: build/libs/reflected-parameters-all.jar
+BuildCommand: gradle fatJar
