@@ -1,6 +1,7 @@
 Uuid: 8e8f6bb313db46ba9e0a7539d3726651
 ExtensionType: 1
 Name: Reflected Parameters
+RepoName: reflected-parameters
 ScreenVersion: 0.26
 SerialVersion: 1
 MinPlatformVersion: 0
