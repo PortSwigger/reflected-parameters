@@ -12,9 +12,11 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableModel;
 import javax.swing.table.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URLDecoder;
 import javax.swing.ListSelectionModel;
@@ -42,6 +44,7 @@ public class BurpExtender extends AbstractTableModel implements IBurpExtender, I
     private JMenuItem menuItemIntruder;
     private JMenuItem menuItemRepeater;
     private JMenuItem menuItemCopyURL;
+    private JMenuItem menuItemCopyAllURL;
     private JMenuItem menuItemDeleteItem;
     private JMenuItem menuItemClearList;
 
@@ -83,7 +86,7 @@ public class BurpExtender extends AbstractTableModel implements IBurpExtender, I
                 ParametersTableModel parametersTableModel = new ParametersTableModel();
                 
                 parametersTable = new ParametersTable(parametersTableModel);
-                parametersTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+                parametersTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
                 
                 
                 // Setting the colums width
@@ -93,7 +96,8 @@ public class BurpExtender extends AbstractTableModel implements IBurpExtender, I
                 requestTable.getColumnModel().getColumn(2).setPreferredWidth(80);
                 requestTable.getColumnModel().getColumn(3).setPreferredWidth(500);
                 requestTable.getColumnModel().getColumn(4).setPreferredWidth(80);
-                requestTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+                requestTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+                requestTable.setAutoCreateRowSorter(true);
                 
                 
                 
@@ -104,6 +108,7 @@ public class BurpExtender extends AbstractTableModel implements IBurpExtender, I
                 menuItemIntruder = new JMenuItem("Send request to Intruder");
                 menuItemRepeater = new JMenuItem("Send request to Repeater");
                 menuItemCopyURL = new JMenuItem("Copy URL");
+                menuItemCopyAllURL = new JMenuItem("Copy All URLs");
                 menuItemDeleteItem = new JMenuItem("Delete item");
                 menuItemClearList = new JMenuItem("Clear list");
                 
@@ -113,6 +118,7 @@ public class BurpExtender extends AbstractTableModel implements IBurpExtender, I
                 menuItemIntruder.addActionListener(requestTable);
                 menuItemRepeater.addActionListener(requestTable);
                 menuItemCopyURL.addActionListener(requestTable);
+                menuItemCopyAllURL.addActionListener(requestTable);
                 menuItemDeleteItem.addActionListener(requestTable);
                 menuItemClearList.addActionListener(requestTable);
                 
@@ -122,6 +128,7 @@ public class BurpExtender extends AbstractTableModel implements IBurpExtender, I
                 popupMenu.add(menuItemRepeater);
                 popupMenu.add(new JSeparator());
                 popupMenu.add(menuItemCopyURL);
+                popupMenu.add(menuItemCopyAllURL);
                 popupMenu.add(menuItemDeleteItem);
                 popupMenu.add(new JSeparator());
                 popupMenu.add(menuItemClearList);
@@ -388,11 +395,19 @@ public class BurpExtender extends AbstractTableModel implements IBurpExtender, I
         {
             JMenuItem menu = (JMenuItem) event.getSource();
             int row = this.getSelectedRow();
-
+            
             // If no row is selected
             if (row == -1)
                 return;
-            ReflectedEntry reflectedEntry = reflectedEntryList.get(row);
+            ReflectedEntry reflectedEntry;
+            int selectedRows[] = null;
+            if (this.getSelectedRowCount() > 1) {
+            	selectedRows = this.getSelectedRows();
+            	reflectedEntry = reflectedEntryList.get(row);
+            } else {
+            	reflectedEntry = reflectedEntryList.get(row);
+            }
+            
             boolean useHttps = false;
             if (reflectedEntry.url.getProtocol().toLowerCase().equals("https"))
                 useHttps = true;
@@ -424,6 +439,26 @@ public class BurpExtender extends AbstractTableModel implements IBurpExtender, I
                 StringSelection stringSelection = new StringSelection (reflectedEntry.url.toString());
                 Clipboard clpbrd = Toolkit.getDefaultToolkit ().getSystemClipboard ();
                 clpbrd.setContents (stringSelection, null);
+            }
+            else if (menu == menuItemCopyAllURL)
+            {	
+            	if (selectedRows.length > 1) {
+	            	List<String> allUrls = new ArrayList<String>();
+	            	for (int i = 0; i < selectedRows.length; i++) {
+	            		reflectedEntry = reflectedEntryList.get(i);
+	            		allUrls.add(reflectedEntry.url.toString());
+	            	}
+	            	
+	            	StringBuilder res = new StringBuilder();
+	            	for (int j = 0; j < allUrls.size(); j++) {
+						res.append(allUrls.get(j));
+						res.append("\n");
+					}
+	
+					StringSelection stringSelection = new StringSelection (res.substring(0,res.length() - 1));
+					Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
+					clip.setContents (stringSelection, null);
+            	}
             }
             else if (menu == menuItemDeleteItem)
             {
